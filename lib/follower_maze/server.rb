@@ -17,7 +17,7 @@ module FollowerMaze
         sockets, _, _ = IO.select(@connections + [@user_server, @event_server])
 
         sockets.each do |socket|
-          socket == @user_server or next
+          [@user_server, @event_server].include? socket or next
           Logger.info "Accepting connection.."
           connection = socket.accept
           @connections << connection
