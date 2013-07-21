@@ -1,5 +1,6 @@
 require 'socket'
-require './lib/follower_maze/user.rb'
+require './lib/follower_maze/user'
+require './lib/follower_maze/user_store'
 
 module FollowerMaze
   class Server
@@ -12,7 +13,7 @@ module FollowerMaze
 
       @connections = []
       @event_connection = nil
-      @users = {}
+      @user_store = UserStore.new
     end
 
     def start
@@ -50,8 +51,7 @@ module FollowerMaze
 
       if id
         user = User.new id, socket
-        @users[user.id] = user
-        Logger.info "Creating user with id: #{user.id}"
+        @user_store.add user
       end
     end
 
@@ -67,7 +67,7 @@ module FollowerMaze
         Logger.info "Handling message: #{payload.strip}"
         sequence_num, type_key, from_user_id, to_user_id = payload.strip.split('|')
 
-        to_user   = @users[to_user_id.to_i] if to_user_id
+        to_user = @user_store.find(to_user_id) if to_user_id
 
         case type_key.downcase.to_sym
         when :f then follow(to_user, payload)
@@ -87,7 +87,7 @@ module FollowerMaze
     end
 
     def broadcast payload
-      @users.each do |id, user|
+      @user_store.all.each do |user|
         user.write payload
       end
     end
