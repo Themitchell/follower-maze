@@ -3,6 +3,7 @@ require 'timeout'
 
 describe FollowerMaze::Server do
 
+  let(:timeout)       { 3 }
   let(:event_client)  { TCPSocket.new 'localhost', 9090 }
   let(:client_1)      { TCPSocket.new 'localhost', 9099 }
   let(:client_2)      { TCPSocket.new 'localhost', 9099 }
@@ -11,7 +12,7 @@ describe FollowerMaze::Server do
     Thread.new { subject.start }
     client_1.write "60\r\n"
     client_2.write "50\r\n"
-    sleep 4
+    sleep 2
   end
 
   after do
@@ -26,11 +27,11 @@ describe FollowerMaze::Server do
     before { event_client.write message }
 
     it 'receives a message at client 2' do
-      Timeout.timeout(5) { client_2.readpartial(1024) }.first.should eql message
+      Timeout.timeout(timeout) { client_2.readpartial(1024) }.should eql message
     end
 
     it 'does not receive message at client 1' do
-      expect { Timeout.timeout(5) { client_1.readpartial(1024) } }.to raise_error Timeout::Error
+      expect { Timeout.timeout(timeout) { client_1.readpartial(1024) } }.to raise_error Timeout::Error
     end
   end
 
