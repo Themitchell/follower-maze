@@ -1,4 +1,5 @@
 require 'socket'
+require './lib/follower_maze/user.rb'
 
 module FollowerMaze
   class Server
