@@ -68,6 +68,7 @@ module FollowerMaze
         case type_key.downcase.to_sym
         when :f then follow(to_user, payload)
         when :u then unfollow
+        when :b then broadcast(payload)
         end
       end
     end
@@ -80,5 +81,10 @@ module FollowerMaze
       # Do nothing
     end
 
+    def broadcast payload
+      @users.each do |id, user|
+        user.write payload
+      end
+    end
   end
 end
