@@ -49,8 +49,9 @@ module FollowerMaze
       end
 
       if id
-        Logger.info "Creating user with id: #{id.strip}"
-        @users[id.to_i] = socket
+        user = User.new id, socket
+        @users[user.id] = user
+        Logger.info "Creating user with id: #{user.id}"
       end
     end
 
@@ -66,7 +67,7 @@ module FollowerMaze
         Logger.info "Handling message: #{payload.strip}"
         sequence_num, type_key, from_user_id, to_user_id = payload.strip.split('|')
 
-        to_user   = @users[to_user_id.to_i]
+        to_user   = @users[to_user_id.to_i] if to_user_id
 
         case type_key.downcase.to_sym
         when :f then follow(to_user, payload)
