@@ -1,4 +1,5 @@
 require 'socket'
+require 'timeout'
 require './lib/follower_maze/user'
 require './lib/follower_maze/user_store'
 
