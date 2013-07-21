@@ -65,14 +65,19 @@ module FollowerMaze
 
         to_user   = @users[to_user_id.to_i]
 
-        case type_key.to_sym
-        when :F then follow(to_user, payload)
+        case type_key.downcase.to_sym
+        when :f then follow(to_user, payload)
+        when :u then unfollow
         end
       end
     end
 
     def follow user, payload
       user.write payload
+    end
+
+    def unfollow
+      # Do nothing
     end
 
   end
