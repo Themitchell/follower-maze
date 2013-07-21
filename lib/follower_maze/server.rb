@@ -1,7 +1,7 @@
 require 'socket'
 require 'timeout'
-require './lib/follower_maze/user'
 require './lib/follower_maze/user_store'
+require './lib/follower_maze/user'
 
 module FollowerMaze
   class Server
@@ -14,7 +14,6 @@ module FollowerMaze
 
       @connections = []
       @event_connection = nil
-      @user_store = UserStore.new
     end
 
     def start
@@ -52,7 +51,7 @@ module FollowerMaze
 
       if id
         user = User.new id, socket
-        @user_store.add user
+        UserStore.add user
       end
     end
 
@@ -69,8 +68,8 @@ module FollowerMaze
         sequence_num, type_key, from_user_id, to_user_id = payload.strip.split('|')
 
         type      = type_key.downcase.to_sym
-        from_user = @user_store.find(from_user_id)  if from_user_id
-        to_user   = @user_store.find(to_user_id)    if to_user_id
+        from_user = UserStore.find(from_user_id)  if from_user_id
+        to_user   = UserStore.find(to_user_id)    if to_user_id
 
         case type
         when :f then follow(from_user, to_user, payload)
@@ -82,6 +81,7 @@ module FollowerMaze
     end
 
     def follow from_user, to_user, payload
+      to_user.add_follower from_user
       Logger.debug "User: #{from_user.id} followed User: #{to_user.id}"
       to_user.write payload
     end
@@ -92,7 +92,7 @@ module FollowerMaze
     end
 
     def broadcast payload
-      users = @user_store.all
+      users = UserStore.all
       Logger.debug "#{users.size} users available to broadcast"
       users.each do |user|
         user.write payload
