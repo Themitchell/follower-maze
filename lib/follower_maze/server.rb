@@ -3,6 +3,8 @@ require 'socket'
 module FollowerMaze
   class Server
 
+    TIMEOUT = 2
+
     def initialize
       @event_server = TCPServer.new 9090
       @user_server = TCPServer.new 9099
@@ -40,7 +42,7 @@ module FollowerMaze
     def create_user socket
       id = nil
       begin
-        Timeout.timeout(3) { id = socket.gets }
+        Timeout.timeout(TIMEOUT) { id = socket.gets }
       rescue Timeout::Error
         Logger.error 'Timed out reading message!'
       end
@@ -54,9 +56,9 @@ module FollowerMaze
     def handle_message socket
       payload = nil
       begin
-        Timeout.timeout(3) { payload = socket.gets }
+        Timeout.timeout(TIMEOUT) { payload = socket.gets }
       rescue Timeout::Error
-        Logger.error 'Timed out reading message!'
+        Logger.error 'Timed out reading id!'
       end
 
       if payload
@@ -69,6 +71,7 @@ module FollowerMaze
         when :f then follow(to_user, payload)
         when :u then unfollow
         when :b then broadcast(payload)
+        when :p then private_message(to_user, payload)
         end
       end
     end
@@ -86,5 +89,10 @@ module FollowerMaze
         user.write payload
       end
     end
+
+    def private_message user, payload
+      user.write payload
+    end
+
   end
 end

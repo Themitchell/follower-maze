@@ -12,7 +12,7 @@ describe FollowerMaze::Server do
     Thread.new { subject.start }
     client_1.write "1\r\n"
     client_2.write "2\r\n"
-    sleep 3
+    sleep 1
   end
 
   after do
@@ -26,12 +26,12 @@ describe FollowerMaze::Server do
 
     before { event_client.write message }
 
-    it 'receives a message at client 2' do
-      Timeout.timeout(timeout) { client_2.readpartial(1024) }.should eql message
-    end
-
     it 'does not receive message at client 1' do
       expect { Timeout.timeout(timeout) { client_1.readpartial(1024) } }.to raise_error Timeout::Error
+    end
+
+    it 'receives a message at client 2' do
+      Timeout.timeout(timeout) { client_2.readpartial(1024) }.should eql message
     end
   end
 
@@ -63,6 +63,19 @@ describe FollowerMaze::Server do
     end
   end
 
-  context 'Private Message: Only the To User Id should be notified'
+  context 'Private Message: Only the To User Id should be notified' do
+    let(:message) { "43|P|1|2\r\n" }
+
+    before { event_client.write message }
+
+    it 'does not receive message at client 1' do
+      expect { Timeout.timeout(timeout) { client_1.readpartial(1024) } }.to raise_error Timeout::Error
+    end
+
+    it 'receives a message at client 2' do
+      Timeout.timeout(timeout) { client_2.readpartial(1024) }.should eql message
+    end
+  end
+
   context 'Status Update: All current followers of the From User ID should be notified'
 end
