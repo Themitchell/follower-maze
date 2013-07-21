@@ -65,7 +65,7 @@ module FollowerMaze
       end
 
       if payload
-        Logger.info "Handling message: #{payload.strip}"
+        Logger.debug "Handling message: #{payload.strip}"
         sequence_num, type_key, from_user_id, to_user_id = payload.strip.split('|')
 
         to_user = @user_store.find(to_user_id) if to_user_id
