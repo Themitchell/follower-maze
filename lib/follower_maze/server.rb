@@ -68,33 +68,39 @@ module FollowerMaze
         Logger.debug "Handling message: #{payload.strip}"
         sequence_num, type_key, from_user_id, to_user_id = payload.strip.split('|')
 
-        to_user = @user_store.find(to_user_id) if to_user_id
+        type      = type_key.downcase.to_sym
+        from_user = @user_store.find(from_user_id)  if from_user_id
+        to_user   = @user_store.find(to_user_id)    if to_user_id
 
-        case type_key.downcase.to_sym
-        when :f then follow(to_user, payload)
-        when :u then unfollow
+        case type
+        when :f then follow(from_user, to_user, payload)
+        when :u then unfollow(from_user, to_user)
         when :b then broadcast(payload)
-        when :p then private_message(to_user, payload)
+        when :p then private_message(from_user, to_user, payload)
         end
       end
     end
 
-    def follow user, payload
-      user.write payload
+    def follow from_user, to_user, payload
+      Logger.debug "User: #{from_user.id} followed User: #{to_user.id}"
+      to_user.write payload
     end
 
-    def unfollow
+    def unfollow from_user, to_user
+      Logger.debug "User: #{from_user.id} unfollowed User: #{to_user.id}"
       # Do nothing
     end
 
     def broadcast payload
-      @user_store.all.each do |user|
+      users = @user_store.all
+      Logger.debug "#{users.size} users available to broadcast"
+      users.each do |user|
         user.write payload
       end
     end
 
-    def private_message user, payload
-      user.write payload
+    def private_message from_user, to_user, payload
+      to_user.write payload
     end
 
   end

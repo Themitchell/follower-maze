@@ -3,7 +3,7 @@ require 'timeout'
 
 describe FollowerMaze::Server do
 
-  let(:timeout)       { 4 }
+  let(:timeout)       { 7 }
   let(:event_client)  { TCPSocket.new 'localhost', 9090 }
   let(:client_1)      { TCPSocket.new 'localhost', 9099 }
   let(:client_2)      { TCPSocket.new 'localhost', 9099 }
