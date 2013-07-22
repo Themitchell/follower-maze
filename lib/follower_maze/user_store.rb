@@ -28,6 +28,10 @@ module FollowerMaze
         @store.delete id.try(:to_i)
         Logger.debug "UserStore: Destroyed user with id: #{id.try(:to_i)}"
       end
+
+      def destroy_all
+        @store = {}
+        Logger.debug "UserStore: Destroyed everything!!!!!!"
       end
     end
   end
