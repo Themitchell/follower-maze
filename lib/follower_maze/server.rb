@@ -46,7 +46,7 @@ module FollowerMaze
       begin
         Timeout.timeout(TIMEOUT) { id = socket.gets }
       rescue Timeout::Error
-        Logger.error 'Timed out reading message!'
+        Logger.error 'Server: Timed out reading message!'
       end
 
       if id
@@ -60,7 +60,7 @@ module FollowerMaze
       begin
         Timeout.timeout(TIMEOUT) { payload = socket.gets }
       rescue Timeout::Error
-        Logger.error 'Timed out reading id!'
+        Logger.error 'Server: Timed out reading id!'
       end
 
       if payload
@@ -82,7 +82,7 @@ module FollowerMaze
 
     def follow from_user, to_user, payload
       to_user.add_follower from_user
-      Logger.debug "User: #{from_user.id} followed User: #{to_user.id}"
+      Logger.debug "Server: User #{from_user.id} followed User #{to_user.id}"
       to_user.write payload
     end
 
@@ -93,7 +93,7 @@ module FollowerMaze
 
     def broadcast payload
       users = UserStore.all
-      Logger.debug "#{users.size} users available to broadcast"
+      Logger.debug "Server: #{users.size} Users available to broadcast"
       users.each do |user|
         user.write payload
       end

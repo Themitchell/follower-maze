@@ -17,14 +17,17 @@ module FollowerMaze
 
     def followers
       Logger.info @follower_ids.inspect
+      Logger.debug "User: Finding User #{id}'s followers #{@follower_ids.inspect}"
       @follower_ids.map { |id| UserStore.find id }
     end
 
     def add_follower user
+      Logger.debug "User: Adding User #{user.id} to User #{id}'s followers"
       @follower_ids << user.id
     end
 
     def remove_follower user
+      Logger.debug "User: Removing User #{user.id} from User #{id}'s followers"
       @follower_ids.delete user.id
     end
 
