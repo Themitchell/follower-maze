@@ -87,8 +87,8 @@ module FollowerMaze
     end
 
     def unfollow from_user, to_user
-      Logger.debug "User: #{from_user.id} unfollowed User: #{to_user.id}"
-      # Do nothing
+      to_user.remove_follower from_user
+      Logger.debug "Server: User #{from_user.id} unfollowed User #{to_user.id}"
     end
 
     def broadcast payload

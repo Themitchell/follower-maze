@@ -24,5 +24,9 @@ module FollowerMaze
       @follower_ids << user.id
     end
 
+    def remove_follower user
+      @follower_ids.delete user.id
+    end
+
   end
 end

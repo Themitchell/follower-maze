@@ -21,4 +21,16 @@ describe FollowerMaze::User do
     end
   end
 
+  describe '#remove_follower' do
+    let(:user) { FollowerMaze::User.new 2, connection }
+    before do
+      subject.follower_ids << 2
+      subject.remove_follower user
+    end
+
+    it 'adds a user to the list of followers_id' do
+      subject.followers.should_not include user
+    end
+  end
+
 end
