@@ -76,6 +76,7 @@ module FollowerMaze
         when :u then unfollow(from_user, to_user)
         when :b then broadcast(payload)
         when :p then private_message(from_user, to_user, payload)
+        when :s then status_update(from_user, payload)
         end
       end
     end
@@ -101,6 +102,15 @@ module FollowerMaze
 
     def private_message from_user, to_user, payload
       to_user.write payload
+    end
+
+    def status_update from_user, payload
+      followers = from_user.followers
+      Logger.debug "Server: User #{from_user.id} sending a status update to #{followers.count} followers..."
+      followers.each do |user|
+        Logger.debug "Server: ...User #{from_user.id} sending a status update to User: #{user.id}"
+        user.write payload
+      end
     end
 
   end
