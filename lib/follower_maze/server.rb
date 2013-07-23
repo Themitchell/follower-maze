@@ -64,7 +64,7 @@ module FollowerMaze
       end
 
       if payload
-        Logger.debug "Handling message: #{payload.strip}"
+        Logger.debug "Server: Handling message #{payload.strip}"
         sequence_num, type_key, from_user_id, to_user_id = payload.strip.split('|')
 
         type      = type_key.downcase.to_sym
@@ -82,12 +82,14 @@ module FollowerMaze
     end
 
     def follow from_user, to_user, payload
+      return nil unless from_user && to_user
       to_user.add_follower from_user
       Logger.debug "Server: User #{from_user.id} followed User #{to_user.id}"
       to_user.write payload
     end
 
     def unfollow from_user, to_user
+      return nil unless from_user && to_user
       to_user.remove_follower from_user
       Logger.debug "Server: User #{from_user.id} unfollowed User #{to_user.id}"
     end
@@ -101,10 +103,12 @@ module FollowerMaze
     end
 
     def private_message from_user, to_user, payload
-      to_user.write payload
+      return nil unless to_user
+      to_user.write payload if to_user
     end
 
     def status_update from_user, payload
+      return nil unless from_user
       followers = from_user.followers
       Logger.debug "Server: User #{from_user.id} sending a status update to #{followers.count} followers..."
       followers.each do |user|
