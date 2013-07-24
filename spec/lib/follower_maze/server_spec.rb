@@ -13,14 +13,12 @@ describe FollowerMaze::Server do
     @thread = Thread.new { subject.start }
     client_1.write "1\r\n"
     client_2.write "2\r\n"
-    client_3.write "3\r\n"
     sleep 1
   end
 
   after do
     client_1.close
     client_2.close
-    client_3.close
     event_client.close
     @thread.kill
     sleep 1
@@ -86,10 +84,15 @@ describe FollowerMaze::Server do
     let(:message)   { "634|S|1\r\n" }
 
     before do
+      client_3.write "3\r\n"
+      sleep 1
       event_client.write "1|F|2|1\r\n" # make user 2 follow user 1
       event_client.write "1|F|3|1\r\n" # make user 3 follow user 1
       event_client.write "2|U|3|1\r\n" # make user 3 unfollow user 1
       event_client.write message
+    end
+    after do
+      client_3.close
     end
 
     it 'does not receive message at client 1' do
