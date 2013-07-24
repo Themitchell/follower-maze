@@ -2,6 +2,7 @@ require 'socket'
 require 'timeout'
 require './lib/follower_maze/user_store'
 require './lib/follower_maze/user'
+require './lib/follower_maze/event'
 
 module FollowerMaze
   class Server
@@ -9,11 +10,13 @@ module FollowerMaze
     TIMEOUT = 2
 
     def initialize
-      @event_server = TCPServer.new 9090
-      @user_server = TCPServer.new 9099
-
-      @connections = []
+      @event_server     = TCPServer.new 9090
       @event_connection = nil
+
+      @user_server      = TCPServer.new 9099
+      @connections      = []
+
+      @events = {}
     end
 
     def start
@@ -65,55 +68,46 @@ module FollowerMaze
 
       if payload
         Logger.debug "Server: Handling message #{payload.strip}"
-        sequence_num, type_key, from_user_id, to_user_id = payload.strip.split('|')
+        event = Event.new payload
+        @events[event.sequence_num] = event
 
-        type      = type_key.downcase.to_sym
-        from_user = UserStore.find(from_user_id)  if from_user_id
-        to_user   = UserStore.find(to_user_id)    if to_user_id
-
-        case type
-        when :f then follow(from_user, to_user, payload)
-        when :u then unfollow(from_user, to_user)
-        when :b then broadcast(payload)
-        when :p then private_message(from_user, to_user, payload)
-        when :s then status_update(from_user, payload)
-        end
+        send(event.kind, event)
       end
     end
 
-    def follow from_user, to_user, payload
-      return nil unless from_user && to_user
-      to_user.add_follower from_user
-      Logger.debug "Server: User #{from_user.id} followed User #{to_user.id}"
-      to_user.write payload
+    def follow event
+      return nil unless event.from_user && event.to_user
+      event.to_user.add_follower event.from_user
+      Logger.debug "Server: User #{event.from_user.id} followed User #{event.to_user.id}"
+      event.to_user.write event.payload
     end
 
-    def unfollow from_user, to_user
-      return nil unless from_user && to_user
-      to_user.remove_follower from_user
-      Logger.debug "Server: User #{from_user.id} unfollowed User #{to_user.id}"
+    def unfollow event
+      return nil unless event.from_user && event.to_user
+      event.to_user.remove_follower event.from_user
+      Logger.debug "Server: User #{event.from_user.id} unfollowed User #{event.to_user.id}"
     end
 
-    def broadcast payload
+    def broadcast event
       users = UserStore.all
       Logger.debug "Server: #{users.size} Users available to broadcast"
       users.each do |user|
-        user.write payload
+        user.write event.payload
       end
     end
 
-    def private_message from_user, to_user, payload
-      return nil unless to_user
-      to_user.write payload if to_user
+    def private_message event
+      return nil unless event.to_user
+      event.to_user.write event.payload if event.to_user
     end
 
-    def status_update from_user, payload
-      return nil unless from_user
-      followers = from_user.followers
-      Logger.debug "Server: User #{from_user.id} sending a status update to #{followers.count} followers..."
+    def status_update event
+      return nil unless event.from_user
+      followers = event.from_user.followers
+      Logger.debug "Server: User #{event.from_user.id} sending a status update to #{followers.count} followers..."
       followers.each do |user|
-        Logger.debug "Server: ...User #{from_user.id} sending a status update to User: #{user.id}"
-        user.write payload
+        Logger.debug "Server: ...User #{event.from_user.id} sending a status update to User: #{user.id}"
+        user.write event.payload
       end
     end
 
