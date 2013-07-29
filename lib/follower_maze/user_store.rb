@@ -5,6 +5,8 @@ module FollowerMaze
 
     @store = {}
 
+    class NotFoundError < StandardError; end
+
     class << self
       def add user
         @store[user.id] = user
@@ -13,9 +15,12 @@ module FollowerMaze
       end
 
       def find id
-        user = @store[id.to_i]
-        Logger.debug "UserStore: Found user with id: #{user.id}" if user
-        user
+        if user = @store[id.to_i]
+          Logger.debug "UserStore: Found user with id: #{user.id}"
+          return user
+        else
+          raise NotFoundError
+        end
       end
 
       def all
@@ -25,8 +30,12 @@ module FollowerMaze
       end
 
       def destroy id
-        @store.delete id.try(:to_i)
-        Logger.debug "UserStore: Destroyed user with id: #{id.try(:to_i)}"
+        if @store.delete id.try(:to_i)
+          Logger.debug "UserStore: Destroyed user with id: #{id.try(:to_i)}"
+          return nil
+        else
+          raise NotFoundError
+        end
       end
 
       def destroy_all
