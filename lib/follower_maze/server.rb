@@ -34,9 +34,14 @@ module FollowerMaze
           end
         end
 
-        while @events.any? && !@events[@last_event_sequence_num + 1].nil?
+        while @events.any?
           event = @events[@last_event_sequence_num += 1]
-          break if event.nil?
+
+          if event.nil?
+            @last_event_sequence_num -= 1
+            break
+          end
+
           begin
             event.process
           rescue FollowerMaze::User::NotificationError => e
@@ -74,7 +79,11 @@ module FollowerMaze
       end
 
       if id
-        user = User.new id, socket
+        begin
+          user = UserStore.find id
+        rescue FollowerMaze::UserStore::NotFoundError
+          user = User.new id, socket
+        end
         UserStore.add user
       end
     end
