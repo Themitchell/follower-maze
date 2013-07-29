@@ -23,12 +23,39 @@ module FollowerMaze
     end
 
     def from_user
-      @from_user ||= UserStore.find from_user_id
+      UserStore.find from_user_id
     end
 
     def to_user
-      @to_user ||= UserStore.find to_user_id
+      UserStore.find to_user_id
     end
 
+    def process
+      Logger.info "Processing #{kind} Event #{sequence_num} with payload #{payload.strip}"
+
+      begin
+        case kind
+        when :follow
+          to_user.add_follower from_user
+          to_user.notify payload
+        when :unfollow
+          to_user.remove_follower from_user
+        when :broadcast
+          UserStore.all.each do |user|
+            user.notify payload
+          end
+        when :private_message
+          to_user.notify payload
+        when :status_update
+          from_user.followers.each do |user|
+            user.notify payload
+          end
+        end
+
+      rescue FollowerMaze::UserStore::NotFoundError => e
+        Logger.warn "Event: Cancelled Event #{sequence_num} because no user was found: #{e}"
+      end
+
+    end
   end
 end
