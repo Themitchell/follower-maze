@@ -9,6 +9,7 @@ GEM
     debugger-linecache (1.2.0)
     debugger-ruby_core_source (1.2.3)
     diff-lcs (1.2.4)
+    rake (10.0.4)
     rspec (2.14.0)
       rspec-core (~> 2.14.0)
       rspec-expectations (~> 2.14.0)
@@ -23,4 +24,5 @@ PLATFORMS
 
 DEPENDENCIES
   debugger
+  rake
   rspec
