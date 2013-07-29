@@ -1,9 +1,9 @@
-require './lib/follower_maze/user_store'
-
 module FollowerMaze
   class User
 
     attr_reader :id, :connection, :follower_ids
+
+    class NotificationError < StandardError; end
 
     def initialize id, connection
       @id = id.to_i
@@ -11,8 +11,15 @@ module FollowerMaze
       @follower_ids = []
     end
 
-    def write *args
-      connection.write *args
+    def notify *args
+      Timeout.timeout(TIMEOUT) do
+        connection.write *args
+        Logger.info "User: Notfied of payload: #{args.first}"
+      end
+    rescue Timeout::Error
+      raise NotificationError
+    rescue Errno::EPIPE
+      raise NotificationError
     end
 
     def followers
