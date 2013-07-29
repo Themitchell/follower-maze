@@ -16,7 +16,6 @@ module FollowerMaze
     end
 
     def followers
-      Logger.info @follower_ids.inspect
       Logger.debug "User: Finding User #{id}'s followers #{@follower_ids.inspect}"
       @follower_ids.map { |id| UserStore.find id }
     end

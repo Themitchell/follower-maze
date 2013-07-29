@@ -7,8 +7,6 @@ require './lib/follower_maze/event'
 module FollowerMaze
   class Server
 
-    TIMEOUT = 2
-
     def initialize
       @event_server     = TCPServer.new 9090
       @event_connection = nil
