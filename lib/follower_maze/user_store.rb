@@ -19,7 +19,7 @@ module FollowerMaze
           Logger.debug "UserStore: Found user with id: #{user.id}"
           return user
         else
-          raise NotFoundError
+          raise NotFoundError.new
         end
       end
 
@@ -34,7 +34,7 @@ module FollowerMaze
           Logger.debug "UserStore: Destroyed user with id: #{id.try(:to_i)}"
           return nil
         else
-          raise NotFoundError
+          raise NotFoundError.new
         end
       end
 

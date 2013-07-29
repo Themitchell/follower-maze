@@ -17,9 +17,9 @@ module FollowerMaze
         Logger.info "User: Notfied of payload: #{args.first}"
       end
     rescue Timeout::Error
-      raise NotificationError
+      raise NotificationError.new
     rescue Errno::EPIPE
-      raise NotificationError
+      raise NotificationError.new
     end
 
     def followers
