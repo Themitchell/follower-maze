@@ -11,10 +11,10 @@ module FollowerMaze
       @follower_ids = []
     end
 
-    def notify *args
+    def notify payload
       Timeout.timeout(TIMEOUT) do
-        connection.write *args
-        Logger.info "User: Notfied of payload: #{args.first}"
+        connection.write payload
+        Logger.info "User: Notfied of payload: #{payload}"
       end
     rescue Timeout::Error
       raise NotificationError.new
