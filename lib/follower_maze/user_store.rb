@@ -22,7 +22,7 @@ module FollowerMaze
       end
 
       def find_by_connection connection
-        user = @store.values.find { |user| user.connection == connection }
+        user = @store.values.find { |user| user.connection.fileno == connection.fileno }
         return unless user
         Logger.debug "UserStore: Found user with id: #{user.id}"
         user
