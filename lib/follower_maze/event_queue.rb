@@ -9,7 +9,7 @@ module FollowerMaze
     end
 
     def add_event event
-      Logger.debug "EventQueue: Adding Event #{event_sequence_num} to the queue"
+      Logger.debug "EventQueue: Adding Event #{event.sequence_num} to the queue"
       @events[event.sequence_num] = event
     end
 
