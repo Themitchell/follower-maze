@@ -12,6 +12,8 @@ module FollowerMaze
       @to_user_id   = payload_parts[3].to_i if payload_parts[3]
     end
 
+    class ProcessingError < StandardError; end
+
     def kind
       case @kind_key
       when :f then :follow
@@ -32,30 +34,27 @@ module FollowerMaze
 
     def process
       Logger.info "Processing #{kind} Event #{sequence_num} with payload #{payload.strip}"
-
-      begin
-        case kind
-        when :follow
-          to_user.add_follower from_user
-          to_user.notify payload
-        when :unfollow
-          to_user.remove_follower from_user
-        when :broadcast
-          UserStore.all.each do |user|
-            user.notify payload
-          end
-        when :private_message
-          to_user.notify payload
-        when :status_update
-          from_user.followers.each do |user|
-            user.notify payload
-          end
+      case kind
+      when :follow
+        raise ProcessingError.new "No user to send to!" unless to_user && from_user
+        to_user.add_follower from_user
+        to_user.notify payload
+      when :unfollow
+        raise ProcessingError.new "No user to send to!" unless to_user && from_user
+        to_user.remove_follower from_user
+      when :broadcast
+        UserStore.all.each do |user|
+          user.notify payload
         end
-
-      rescue FollowerMaze::UserStore::NotFoundError => e
-        Logger.warn "Event: Cancelled Event #{sequence_num} because no user was found: #{e}"
+      when :private_message
+        raise ProcessingError.new "No user to send to!" unless to_user
+        to_user.notify payload
+      when :status_update
+        raise ProcessingError.new "No user to send to!" unless from_user
+        from_user.followers.each do |user|
+          user.notify payload
+        end
       end
-
     end
   end
 end
