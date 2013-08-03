@@ -1,25 +1,17 @@
 module FollowerMaze
   class User
 
-    attr_reader :id, :connection, :follower_ids
-
-    class NotificationError < StandardError; end
+    attr_reader :id, :connection, :follower_ids, :messages_to_send
 
     def initialize id, connection
       @id = id.to_i
       @connection = connection
       @follower_ids = []
+      @messages_to_send = ""
     end
 
     def notify payload
-      Timeout.timeout(TIMEOUT) do
-        connection.write payload
-        Logger.info "User: Notfied of payload: #{payload}"
-      end
-    rescue Timeout::Error
-      raise NotificationError.new
-    rescue Errno::EPIPE
-      raise NotificationError.new
+      @messages_to_send << payload
     end
 
     def followers
@@ -35,6 +27,10 @@ module FollowerMaze
     def remove_follower user
       Logger.debug "User: Removing User #{user.id} from User #{id}'s followers"
       @follower_ids.delete user.id
+    end
+
+    def reset_messages!
+      @messages_to_send = ""
     end
 
   end

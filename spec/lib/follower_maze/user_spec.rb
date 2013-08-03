@@ -10,15 +10,15 @@ describe FollowerMaze::User do
   its(:connection)  { should eql connection }
   its(:followers)   { should eql [] }
 
+  let(:message) { 'message' }
+
   describe '#add_follower' do
     before do
       FollowerMaze::UserStore.should_receive(:find).with(2).once { user }
       subject.add_follower user
     end
 
-    it 'adds a user to the list of followers_id' do
-      subject.followers.should include user
-    end
+    its(:followers) { should include user }
   end
 
   describe '#remove_follower' do
@@ -27,30 +27,22 @@ describe FollowerMaze::User do
       subject.remove_follower user
     end
 
-    it 'adds a user to the list of followers_id' do
-      subject.followers.should_not include user
-    end
+    its(:followers) { should_not include user }
   end
 
   describe '#notify' do
-    let(:message) { 'message' }
+    before { subject.notify message }
 
-    it 'calls write on the connection' do
-      connection.should_receive(:write).with(message)
+    its(:messages_to_send) { should eql message }
+  end
+
+  describe '#reset_messages!' do
+    before do
       subject.notify message
+      subject.reset_messages!
     end
 
-    context 'when it raises an error' do
-      it 'should raise an NotificationError if it times out' do
-        connection.should_receive(:write).with(message).and_raise Timeout::Error
-        expect { subject.notify message }.to raise_error FollowerMaze::User::NotificationError
-      end
-
-      it 'should raise an NotificationError if it times out' do
-        connection.should_receive(:write).with(message).and_raise Errno::EPIPE
-        expect { subject.notify message }.to raise_error FollowerMaze::User::NotificationError
-      end
-    end
+    its(:messages_to_send) { should be_empty }
   end
 
 end
