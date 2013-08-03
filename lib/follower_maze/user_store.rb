@@ -15,12 +15,17 @@ module FollowerMaze
       end
 
       def find id
-        if user = @store[id.to_i]
-          Logger.debug "UserStore: Found user with id: #{user.id}"
-          return user
-        else
-          raise NotFoundError.new
-        end
+        user = @store[id.to_i]
+        return unless user
+        Logger.debug "UserStore: Found user with id: #{user.id}"
+        user
+      end
+
+      def find_by_connection connection
+        user = @store.values.find { |user| user.connection == connection }
+        return unless user
+        Logger.debug "UserStore: Found user with id: #{user.id}"
+        user
       end
 
       def all
@@ -29,13 +34,10 @@ module FollowerMaze
         users
       end
 
-      def destroy id
-        if @store.delete id.try(:to_i)
-          Logger.debug "UserStore: Destroyed user with id: #{id.try(:to_i)}"
-          return nil
-        else
-          raise NotFoundError.new
-        end
+      def destroy user
+        @store.delete user.id
+        Logger.debug "UserStore: Destroyed user with id: #{user.id}"
+        return nil
       end
 
       def destroy_all
