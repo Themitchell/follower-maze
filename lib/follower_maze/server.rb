@@ -1,8 +1,10 @@
 require 'socket'
 require 'timeout'
+require './lib/follower_maze/connection'
 require './lib/follower_maze/user_store'
 require './lib/follower_maze/user'
 require './lib/follower_maze/event'
+require './lib/follower_maze/event_queue'
 
 module FollowerMaze
   class Server
@@ -12,44 +14,68 @@ module FollowerMaze
       @event_connection = nil
 
       @user_server      = TCPServer.new 9099
-      @connections      = []
+      @connections      = {}
 
       @events = {}
-      @last_event_sequence_num = 0
+      @event_queue = EventQueue.new
     end
+
+    class NotificationError < StandardError; end
 
     def start
       Logger.info 'Starting server'
 
       loop do
 
-        sockets, _, _ = IO.select(@connections + [@user_server, @event_server])
+        readable_sockets, writable_sockets, _ = IO.select(@connections.values.map(&:socket) + [@user_server, @event_server], @connections.values.map(&:socket))
 
-        sockets.each do |socket|
+        readable_sockets.each do |socket|
           case
-          when socket == @user_server      then accept_connection socket
-          when socket == @event_server     then @event_connection = accept_connection socket
-          when socket == @event_connection then handle_message socket
-          else create_user socket
+          when [@user_server, @event_server].include?(socket)
+            io = socket.accept
+            @connections[io.fileno] = Connection.new(io)
+            @event_connection = io if socket == @event_server
+          when socket == @event_connection
+            handle_message socket
+          else
+            create_user socket
           end
         end
 
-        while @events.any?
-          event = @events[@last_event_sequence_num += 1]
-
-          if event.nil?
-            @last_event_sequence_num -= 1
-            break
-          end
+        while @event_queue.has_events?
+          event = @event_queue.next_event
+          break unless event
 
           begin
             event.process
-          rescue FollowerMaze::User::NotificationError => e
-            Logger.warn "Server: An error occurred processing #{event.kind} Event #{event.sequence_num}: #{e}"
-            @last_event_sequence_num -= 1
-            break
-          else
-            @events.delete event.sequence_num
+          rescue FollowerMaze::Event::ProcessingError => e
+            Logger.warn "Server: ProcessingError for event #{event.sequence_num}: #{e}"
+          end
+
+          @event_queue.complete_event_processing event
+        end
+
+        writable_sockets.each do |socket|
+          connection = @connections[socket.fileno]
+          user = UserStore.find_by_connection(connection)
+          if user
+            begin
+              begin
+                Timeout.timeout(TIMEOUT) do
+                  Logger.info "Notifying user #{user.id} of messages: #{user.messages_to_send.strip}"
+                  socket.write user.messages_to_send
+                  Logger.info "User: Notfied of payload!"
+                end
+              rescue Timeout::Error
+                raise NotificationError.new "Timed out!"
+              rescue Errno::EPIPE
+                raise NotificationError.new "Socket not conenected!"
+              end
+            rescue NotificationError => e
+              Logger.warn "Notifying user failed due to: #{e}"
+            else
+              user.reset_messages!
+            end
           end
         end
 
@@ -57,49 +83,24 @@ module FollowerMaze
     end
 
     private
-    def accept_connection socket
-      Logger.info "Accepting connection"
-      connection = socket.accept
-      @connections << connection
-      connection
-    end
-
     def create_user socket
-      id = nil
-      begin
-        Timeout.timeout(TIMEOUT) do
-          begin
-            id = socket.gets
-          rescue Errno::ECONNRESET => e
-            Logger.warn "Server: An error occured creating a user: #{e}"
-          end
-        end
-      rescue Timeout::Error
-        Logger.error 'Server: Timed out reading message!'
-      end
+      connection = @connections[socket.fileno]
 
-      if id
-        begin
-          user = UserStore.find id
-        rescue FollowerMaze::UserStore::NotFoundError
-          user = User.new id, socket
+      if id = connection.read
+        if user = UserStore.find(id)
+          user.connection = connection
+        else
+          user = User.new(id, connection)
         end
         UserStore.add user
       end
     end
 
     def handle_message socket
-      payload = nil
-      begin
-        Timeout.timeout(TIMEOUT) { payload = socket.gets }
-      rescue Timeout::Error
-        Logger.error 'Server: Timed out reading id!'
-      end
+      connection = @connections[socket.fileno]
 
-      if payload
-        Logger.debug "===> Server: Adding message #{payload.strip} to queue"
-        event = Event.new payload
-        @events[event.sequence_num] = event
+      if payload = connection.read
+        @event_queue.add_event Event.new payload
       end
     end
 
