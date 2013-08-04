@@ -68,12 +68,7 @@ module FollowerMaze
 
       begin
         id = connection.read
-        if user = UserStore.find(id)
-          user.connection = connection
-        else
-          user = User.new(id, connection)
-        end
-        UserStore.add user
+        user = UserStore.create_or_update(id, connection)
       rescue Connection::ReadError => e
         @connections.delete socket.fileno
         Logger.warn "Server: Failed to create user with Connection::ReadError: #{e}"

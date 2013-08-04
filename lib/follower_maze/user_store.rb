@@ -14,6 +14,17 @@ module FollowerMaze
         user
       end
 
+      def create_or_update id, connection
+        if user = find(id)
+          user.connection = connection
+          user
+        else
+          user = User.new id, connection
+          add(user)
+          user
+        end
+      end
+
       def find id
         user = @store[id.to_i]
         return unless user
