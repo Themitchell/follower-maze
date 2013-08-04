@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe FollowerMaze::UserStore do
 
-  let(:connection) { double 'Connection'}
+  let(:connection) { double fileno: '10' }
   let(:user) { FollowerMaze::User.new 1, connection }
 
   describe '#add' do
@@ -15,6 +15,18 @@ describe FollowerMaze::UserStore do
     before { FollowerMaze::UserStore.add user }
 
     it { FollowerMaze::UserStore.find(user.id).should eql user }
+  end
+
+  describe '#find!' do
+    context 'when no user exists' do
+      it { expect { FollowerMaze::UserStore.find! user.id }.to raise_error FollowerMaze::UserStore::NotFoundError }
+    end
+
+    context 'when theuser exists' do
+      before { FollowerMaze::UserStore.add user }
+
+      it { FollowerMaze::UserStore.find!(user.id).should eql user }
+    end
   end
 
   describe '#find_by_connection' do

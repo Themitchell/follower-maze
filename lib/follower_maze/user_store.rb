@@ -27,14 +27,20 @@ module FollowerMaze
 
       def find id
         user = @store[id.to_i]
-        return unless user
+        return nil unless user
         Logger.debug "UserStore: Found user with id: #{user.id}"
+        user
+      end
+
+      def find! id
+        user = find id
+        raise NotFoundError.new unless user
         user
       end
 
       def find_by_connection connection
         user = @store.values.find { |user| user.connection.fileno == connection.fileno }
-        return unless user
+        return nil unless user
         Logger.debug "UserStore: Found user with id: #{user.id}"
         user
       end
