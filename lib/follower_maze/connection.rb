@@ -13,7 +13,7 @@ module FollowerMaze
       begin
         Timeout.timeout(TIMEOUT) { payload = socket.gets }
       rescue Timeout::Error
-        Logger.error 'Connection: Timed out reading from socket!'
+        Logger.warn 'Connection: Timed out reading from socket!'
       end
       payload
     end
