@@ -57,22 +57,13 @@ module FollowerMaze
 
         writable_sockets.each do |socket|
           connection = @connections[socket.fileno]
+          return unless connection
           user = UserStore.find_by_connection(connection)
           if user
             begin
-              begin
-                Timeout.timeout(TIMEOUT) do
-                  Logger.info "Notifying user #{user.id} of messages: #{user.messages_to_send.strip}"
-                  socket.write user.messages_to_send
-                  Logger.info "User: Notfied of payload!"
-                end
-              rescue Timeout::Error
-                raise NotificationError.new "Timed out!"
-              rescue Errno::EPIPE
-                raise NotificationError.new "Socket not conenected!"
-              end
-            rescue NotificationError => e
-              Logger.warn "Notifying user failed due to: #{e}"
+              connection.write user.messages_to_send
+            rescue Connection::WriteError => e
+              Logger.warn "Server: Notifying Connection #{connection.fileno} failed due to: #{e}"
             else
               user.reset_messages!
             end
@@ -86,13 +77,17 @@ module FollowerMaze
     def create_user socket
       connection = @connections[socket.fileno]
 
-      if id = connection.read
+      begin
+        id = connection.read
         if user = UserStore.find(id)
           user.connection = connection
         else
           user = User.new(id, connection)
         end
         UserStore.add user
+      rescue Connection::ReadError => e
+        @connections.delete socket.fileno
+        Logger.warn "Server: Failed to create user with Connection::ReadError: #{e}"
       end
     end
 

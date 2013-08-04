@@ -1,7 +1,8 @@
 module FollowerMaze
   class User
 
-    attr_reader :id, :connection, :follower_ids, :messages_to_send
+    attr_accessor :connection
+    attr_reader :id, :follower_ids, :messages_to_send
 
     def initialize id, connection
       @id = id.to_i
