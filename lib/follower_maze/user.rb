@@ -20,14 +20,14 @@ module FollowerMaze
       @follower_ids.map { |id| UserStore.find id }
     end
 
-    def add_follower user
-      Logger.debug "User: Adding User #{user.id} to User #{id}'s followers"
-      @follower_ids << user.id
+    def add_follower follower_id
+      Logger.debug "User: Adding User #{follower_id} to User #{id}'s followers"
+      @follower_ids << follower_id
     end
 
-    def remove_follower user
-      Logger.debug "User: Removing User #{user.id} from User #{id}'s followers"
-      @follower_ids.delete user.id
+    def remove_follower follower_id
+      Logger.debug "User: Removing User #{follower_id} from User #{id}'s followers"
+      @follower_ids.delete follower_id
     end
 
     def reset_messages!

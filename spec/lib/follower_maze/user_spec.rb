@@ -15,7 +15,7 @@ describe FollowerMaze::User do
   describe '#add_follower' do
     before do
       FollowerMaze::UserStore.should_receive(:find).with(2).once { user }
-      subject.add_follower user
+      subject.add_follower user.id
     end
 
     its(:followers) { should include user }
@@ -24,7 +24,7 @@ describe FollowerMaze::User do
   describe '#remove_follower' do
     before do
       subject.follower_ids << 2
-      subject.remove_follower user
+      subject.remove_follower user.id
     end
 
     its(:followers) { should_not include user }

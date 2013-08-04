@@ -36,10 +36,10 @@ module FollowerMaze
       Logger.info "Processing #{kind} Event #{sequence_num} with payload #{payload.strip}"
       case kind
       when :follow
-        to_user.add_follower from_user
+        to_user.add_follower from_user_id
         to_user.notify payload
       when :unfollow
-        to_user.remove_follower from_user
+        to_user.remove_follower from_user_id
       when :broadcast
         UserStore.all.each do |user|
           user.notify payload

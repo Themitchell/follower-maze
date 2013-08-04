@@ -3,9 +3,9 @@ require 'spec_helper'
 describe FollowerMaze::Event do
 
   let(:payload) { '3|F|1|2' }
-  let(:user1) { double FollowerMaze::User }
-  let(:user2) { double FollowerMaze::User }
-  let(:user3) { double FollowerMaze::User }
+  let(:user1) { double FollowerMaze::User, id: 1 }
+  let(:user2) { double FollowerMaze::User, id: 2 }
+  let(:user3) { double FollowerMaze::User, id: 3 }
 
   subject { FollowerMaze::Event.new payload }
 
@@ -40,13 +40,13 @@ describe FollowerMaze::Event do
       end
 
       it 'notifies the to user and adds the from user to its followers' do
-        user2.should_receive(:add_follower).with(user1)
+        user2.should_receive(:add_follower).with(user1.id)
         user2.should_receive(:notify).with(payload)
         subject.process
       end
 
       it 'does not notify the from user' do
-        user2.should_receive(:add_follower).with(user1)
+        user2.should_receive(:add_follower).with(user1.id)
         user2.should_receive(:notify).with(payload)
         user1.should_not_receive(:notify).with(payload)
         subject.process
@@ -61,13 +61,13 @@ describe FollowerMaze::Event do
       end
 
       it 'does not notify the to user and removes the from user from its followers' do
-        user2.should_receive(:remove_follower).with(user1)
+        user2.should_receive(:remove_follower).with(user1.id)
         user2.should_not_receive(:notify).with(payload)
         subject.process
       end
 
       it 'does not notify the from user' do
-        user2.should_receive(:remove_follower).with(user1)
+        user2.should_receive(:remove_follower).with(user1.id)
         user1.should_not_receive(:notify).with(payload)
         subject.process
       end
