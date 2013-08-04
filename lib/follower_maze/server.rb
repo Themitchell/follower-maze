@@ -46,7 +46,7 @@ module FollowerMaze
 
         writable_sockets.each do |socket|
           connection = @connections[socket.fileno]
-          break unless connection
+          next unless connection
           user = UserStore.find_by_connection(connection)
           if user
             begin
