@@ -42,22 +42,11 @@ module FollowerMaze
           end
         end
 
-        while @event_queue.has_events?
-          event = @event_queue.next_event
-          break unless event
-
-          begin
-            event.process
-          rescue FollowerMaze::Event::ProcessingError => e
-            Logger.warn "Server: ProcessingError for event #{event.sequence_num}: #{e}"
-          end
-
-          @event_queue.complete_event_processing event
-        end
+        @event_queue.process_events
 
         writable_sockets.each do |socket|
           connection = @connections[socket.fileno]
-          return unless connection
+          break unless connection
           user = UserStore.find_by_connection(connection)
           if user
             begin

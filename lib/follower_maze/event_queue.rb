@@ -13,6 +13,18 @@ module FollowerMaze
       @events[event.sequence_num] = event
     end
 
+    def process_events
+      while has_events? && event = next_event
+        begin
+          event.process
+        rescue FollowerMaze::Event::ProcessingError => e
+          Logger.warn "Server: ProcessingError for event #{event.sequence_num}: #{e}"
+        end
+        complete_event_processing event
+      end
+    end
+
+    private
     def complete_event_processing event
       @last_event_sequence_num = event.sequence_num
       @events.delete event.sequence_num
@@ -25,5 +37,6 @@ module FollowerMaze
     def has_events?
       @events.any?
     end
+
   end
 end
