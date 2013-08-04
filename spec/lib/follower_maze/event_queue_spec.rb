@@ -14,7 +14,7 @@ describe FollowerMaze::EventQueue do
 
   describe '#complete_event_processing' do
     let(:expected_events) { {} }
-    before { subject.complete_event_processing event }
+    before { subject.send(:complete_event_processing, event) }
 
     its(:events) { should eql expected_events }
     its(:last_event_sequence_num) { should eql event.sequence_num }
@@ -28,7 +28,6 @@ describe FollowerMaze::EventQueue do
 
     its(:next_event) { event }
   end
-
 
   describe '#has_events?' do
     it 'returns true if there are events in the queue' do

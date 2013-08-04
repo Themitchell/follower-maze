@@ -24,18 +24,18 @@ module FollowerMaze
       end
     end
 
-    private
-    def complete_event_processing event
-      @last_event_sequence_num = event.sequence_num
-      @events.delete event.sequence_num
-    end
-
     def next_event
       event = @events[@last_event_sequence_num + 1]
     end
 
     def has_events?
       @events.any?
+    end
+
+    private
+    def complete_event_processing event
+      @last_event_sequence_num = event.sequence_num
+      @events.delete event.sequence_num
     end
 
   end
