@@ -1,5 +1,14 @@
 # Andrew Mitchell's Solution to Follower Maze
 
+The app begins by creating 2 TCPServer objects. One for the user clients and one for the event source. On start we begin a loop as opposed to using threads. The loop first begins with acall to IO.select. The first argument is all of the sockets we would like to read messages from. The second argument is all of the sockets we want to write to. In the firstcase this isallof the user clients and the event server andin the latter case, thisis simply the user clients.
+
+We first iterate the readable sockets and try to find out wether it is a user client or the event socket. If the socket is a user client we simple begin accepting connections, if it is the event client then we accept connections and hold onto its connection for verification later.If the connection is the event_connection, begin handling the messages received. Finally if the connection matches none of these criteria we try to grab a user id from the client and create a user in the UserStore. In the case of handling a message, we parse out the event payload into an Event object and add it to the event queue.
+
+Once we have done all the reading we would like we then move on to processing the queue. While there are events in the queue and the next_event is available we can process events. If not we break and move on. 
+
+Processing the Event involves fetching the user required for collecting followers or adding followers to. This caught me out at first! For a long time messages were being skipped because the user the message was originally from often could not be found. Instead by only fetching the user which required an object to interact with and using only an id to reference users which did not exist. For example thecaseof User 46 following auser. This would fail as User 46 does not exist but the user it was following does! Once a user had been found and any data processing had been completed the user is "notified" of the event. This places the messages onto a message list ready for sending when the socket is ready.
+
+The final stage of the process is to send the users messages to its corresponding client connection. Using the writeable sockets we waited for IO.select to return earlier, we iterate over the connections and find their corresponding user in the store. If the user has messages to send we then send them to the correct client connection. If something fails writingto the connection it raises anerror. This is rescued and logged. The user's messages are then reset and ready to begin adding more to be sent.
 
 
 
