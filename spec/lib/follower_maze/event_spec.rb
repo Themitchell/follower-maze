@@ -27,6 +27,11 @@ describe FollowerMaze::Event do
   end
 
   describe '#process' do
+    context 'when processing fails due to a user not being found' do
+      before { subject.should_receive(:to_user).and_raise FollowerMaze::UserStore::NotFoundError }
+      it { expect { subject.process }.to raise_error FollowerMaze::Event::ProcessingError }
+    end
+
     context 'when the message is a follow message' do
       before do
         subject.stub(:kind)       { :follow }

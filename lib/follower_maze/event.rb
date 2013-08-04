@@ -25,36 +25,34 @@ module FollowerMaze
     end
 
     def from_user
-      UserStore.find from_user_id
+      UserStore.find! from_user_id
     end
 
     def to_user
-      UserStore.find to_user_id
+      UserStore.find! to_user_id
     end
 
     def process
       Logger.info "Processing #{kind} Event #{sequence_num} with payload #{payload.strip}"
       case kind
       when :follow
-        raise ProcessingError.new "No user to send to!" unless to_user && from_user
         to_user.add_follower from_user
         to_user.notify payload
       when :unfollow
-        raise ProcessingError.new "No user to send to!" unless to_user && from_user
         to_user.remove_follower from_user
       when :broadcast
         UserStore.all.each do |user|
           user.notify payload
         end
       when :private_message
-        raise ProcessingError.new "No user to send to!" unless to_user
         to_user.notify payload
       when :status_update
-        raise ProcessingError.new "No user to send to!" unless from_user
         from_user.followers.each do |user|
           user.notify payload
         end
       end
+    rescue UserStore::NotFoundError
+      raise ProcessingError.new "No user to send to!"
     end
   end
 end
