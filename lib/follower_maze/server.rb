@@ -50,7 +50,8 @@ module FollowerMaze
           user = UserStore.find_by_connection(connection)
           if user
             begin
-              connection.write user.messages_to_send
+              payload = user.messages_to_send
+              connection.write payload unless payload.empty?
             rescue Connection::WriteError => e
               Logger.warn "Server: Notifying Connection #{connection.fileno} failed due to: #{e}"
             else
