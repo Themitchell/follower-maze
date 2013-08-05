@@ -10,6 +10,8 @@ Processing the Event involves fetching the user required for collecting follower
 
 The final stage of the process is to send the users messages to its corresponding client connection. Using the writeable sockets we waited for IO.select to return earlier, we iterate over the connections and find their corresponding user in the store. If the user has messages to send we then send them to the correct client connection. If something fails writingto the connection it raises anerror. This is rescued and logged. The user's messages are then reset and ready to begin adding more to be sent.
 
+Were I to produce this as production code, I would likely replace certain components of the system with something more robust. For example, persisted data such as users, I would likely store in a sequel database and the queue for example could be stored in Redis rather than the very basic hash stores I am currently using. This would help to make the system more robust in a production environment.
+
 ## To Run
 
 ### .. the app
